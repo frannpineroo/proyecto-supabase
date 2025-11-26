@@ -52,7 +52,7 @@ import { RouterOutlet } from '@angular/router';
   `]
 })
 export class App {
-  // 3.LA LÓGICA ( atos falsos)
+  // 3.LA LÓGICA ( datos falsos)
   productos = [
     { nombre: 'Mantenimiento Web', precio: 15000, detalle: 'Mensual' },
     { nombre: 'Landing Page', precio: 45000, detalle: 'Pago único' },
