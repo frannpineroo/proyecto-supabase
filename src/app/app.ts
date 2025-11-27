@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
+import { Supabase } from './services/supabase';
 
 @Component({
   selector: 'app-root',
@@ -9,8 +10,13 @@ import { RouterOutlet } from '@angular/router';
   // 1.EL HTML 
   template: `
     <div class="main-container">
-      <h1>Lista de Precios (Prueba)</h1>
-      <p>Datos mockeados para probar el Front-End.</p>
+      <h1>Lista de Precios</h1>
+      
+      @if (loading) {
+        <p>Cargando productos...</p>
+      } @else {
+        <p>Datos en tiempo real desde Supabase</p>
+      }
 
       <table class="tabla-precios">
         <thead>
@@ -21,17 +27,21 @@ import { RouterOutlet } from '@angular/router';
           </tr>
         </thead>
         <tbody>
-          @for (item of productos; track item.nombre) {
+          @for (item of productos; track item.id) {
             <tr>
               <td>{{ item.nombre }}</td>
               <td>{{ item.detalle }}</td>
               <td class="precio">\${{ item.precio }}</td>
             </tr>
           } @empty {
-            <tr><td colspan="3">No hay datos.</td></tr>
+            <tr><td colspan="3">No hay productos disponibles.</td></tr>
           }
         </tbody>
       </table>
+
+      @if (error) {
+        <p class="error">{{ error }}</p>
+      }
     </div>
   `,
   // 2.EL CSS 
@@ -49,15 +59,31 @@ import { RouterOutlet } from '@angular/router';
     th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
     th { background-color: #007bff; color: white; }
     .precio { font-weight: bold; color: green; text-align: right; }
+    .error { color: red; text-align: center; margin-top: 10px; }
   `]
 })
-export class App {
-  // 3.LA LÓGICA ( datos falsos)
-  productos = [
-    { nombre: 'Mantenimiento Web', precio: 15000, detalle: 'Mensual' },
-    { nombre: 'Landing Page', precio: 45000, detalle: 'Pago único' },
-    { nombre: 'Catálogo Digital', precio: 60000, detalle: 'Conexión a Sheets' },
-    { nombre: 'Hosting', precio: 25000, detalle: 'Anual' },
-    { nombre: 'Soporte', precio: 5000, detalle: 'Por hora' }
-  ];
+export class App implements OnInit {
+  // 3.LA LÓGICA (ahora conectada a Supabase)
+  productos: any[] = [];
+  loading = true;
+  error = '';
+
+  constructor(private supabase: Supabase) {}
+
+  async ngOnInit() {
+    await this.cargarProductos();
+  }
+
+  async cargarProductos() {
+    try {
+      this.loading = true;
+      this.productos = await this.supabase.getProductos();
+      this.error = '';
+    } catch (error: any) {
+      console.error('Error cargando productos:', error);
+      this.error = 'Error al cargar los productos. Verifica la conexión a Supabase.';
+    } finally {
+      this.loading = false;
+    }
+  }
 }
